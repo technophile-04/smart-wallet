@@ -12,9 +12,14 @@ import create from "zustand";
 type TGlobalState = {
   nativeCurrencyPrice: number;
   setNativeCurrencyPrice: (newNativeCurrencyPriceState: number) => void;
+  setPushNotificationSubscription: (subscription: PushSubscription | null) => void;
+  pushNotificationSubscription: PushSubscription | null;
 };
 
 export const useGlobalState = create<TGlobalState>(set => ({
   nativeCurrencyPrice: 0,
   setNativeCurrencyPrice: (newValue: number): void => set(() => ({ nativeCurrencyPrice: newValue })),
+  setPushNotificationSubscription: (subscription: PushSubscription | null): void =>
+    set(() => ({ pushNotificationSubscription: subscription })),
+  pushNotificationSubscription: null,
 }));

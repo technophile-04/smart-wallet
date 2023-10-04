@@ -17,7 +17,7 @@ import "~~/styles/globals.css";
 
 const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   const price = useNativeCurrencyPrice();
-  const setNativeCurrencyPrice = useGlobalState(state => state.setNativeCurrencyPrice);
+  const { setNativeCurrencyPrice, setPushNotificationSubscription } = useGlobalState(state => state);
   // This variable is required for initial client side rendering of correct theme for RainbowKit
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const { isDarkMode } = useDarkMode();
@@ -31,6 +31,19 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   useEffect(() => {
     setIsDarkTheme(isDarkMode);
   }, [isDarkMode]);
+
+  useEffect(() => {
+    async function getSubscription() {
+      try {
+        const swRegistration = await navigator.serviceWorker.ready;
+        const subscription = await swRegistration.pushManager.getSubscription();
+        setPushNotificationSubscription(subscription);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    getSubscription();
+  }, [setPushNotificationSubscription]);
 
   return (
     <WagmiConfig config={wagmiConfig}>

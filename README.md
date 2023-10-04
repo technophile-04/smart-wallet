@@ -1,73 +1,163 @@
-# 🔥 Burner Wallet PWA 📱
+⚠️ This is a work in progress.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+# 🏗 Scaffold-ETH 2 PWA 📱
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, and Typescript.
+This **forkable** project provides the infraestructure to build a Progressive Web App (PWA) using Scaffold-ETH 2 base features, plus PWA oriented extra features, like Push Notifications and the capability to Install the PWA on your device.
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+To learn more about base Scaffold-ETH 2 features and development guide, check our [Docs](https://docs.scaffoldeth.io/) and [Website](https://scaffoldeth.io/).
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/1171422a-0ce4-4203-bcd4-d2d1941d198b)
+## 🏃 Quick Start
 
-## Requirements
+To get started with Scaffold-ETH 2 PWA, follow the steps below:
 
-Before you begin, you need to install the following tools:
+### 1. Clone this repo & install dependencies
 
-- [Node (v18 LTS)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
-
-## Quickstart
-
-To get started with Scaffold-ETH 2, follow the steps below:
-
-1. Clone this repo & install dependencies
-
-```
-git clone https://github.com/scaffold-eth/scaffold-eth-2.git
-cd scaffold-eth-2
+```bash
+gh repo clone BuidlGuidl/PWA-burner-wallet
+cd PWA-burner-wallet
 yarn install
 ```
 
-2. Run a local network in the first terminal:
+### 2. Setting up Firebase
+
+> Note : You can also use other database as well, we are using Firebase for this example checkout `packages/nextjs/database/firebase`.
+
+Create your [Firebase project](https://console.firebase.google.com/) and register a web app. It'll give you a config object that looks like this:
+
+```js
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "...",
+};
+```
+
+Copy `packages/nextjs/.env.example` into `packages/nextjs/.env` file and fill in your Firebase credentials which starts with `FIREBASE_`.
+
+The next step is to create your Firestore database from your [Firebase console](https://console.firebase.google.com/) (_sidebar menu > Build > Firestore Database_). You can start your database in **test mode**, and then change the [rules](https://console.firebase.google.com/project/_/firestore/rules?_gl=1*aqmcm*_ga*MTQxNzU0MTYyMi4xNjk0MTY1NjY2*_ga_CW55HF8NVT*MTY5NTc2ODQwNS4xNC4xLjE2OTU3NzE0MDAuMC4wLjA.) to the following:
 
 ```
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // This rule allows anyone with your Firestore database reference to view, edit,
+    // and delete all data in your Firestore subscriptions collection
+    match /subscriptions/{subscription} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+### 3. Setting VAPID Keys
+
+VAPID keys are a public-private key pair used to securely identify the server sending web push notifications.
+
+Run the following command to generate Public and Private VAPID :
+
+```bash
+yarn web-push-generate
+```
+
+Set `NEXT_PUBLIC_PUBLIC_KEY_VAPID` and `PRIVATE_KEY_VAPID` variables in `packages/nextjs/.env.local` file.
+
+### 4. Starting the PWA
+
+To set up your local environment and start the PWA, run the following commands in different terminal windows:
+
+1. In the first terminal, start your local network (a blockchain emulator in your computer):
+
+```bash
 yarn chain
 ```
 
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `hardhat.config.ts`.
+2. In a second terminal window, deploy your contract (locally):
 
-3. On a second terminal, deploy the test contract:
-
-```
+```bash
 yarn deploy
 ```
 
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
+3. In a third terminal window, start your PWA:
 
-4. On a third terminal, start your NextJS app:
-
-```
+```bash
 yarn start
 ```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the contract component or the example ui in the frontend. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+Visit your web app on: `http://localhost:3000`.
 
-Run smart contract test with `yarn hardhat:test`
+> Note: You can disable dev server logs by uncommenting line `disable: process.env.NODE_ENV=== "development"` in `packages/nextjs/next.config.mjs` file.
 
-- Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
-- Edit your frontend in `packages/nextjs/pages`
-- Edit your deployment scripts in `packages/hardhat/deploy`
+### 5. Testing notification on local
 
-## Documentation
+1. Install the PWA from Chrome web browser.
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+2. Open the PWA, click _"Allow Notification"_ button => This will ask for permission & register the subscription in DB.
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+3. Once its successful you will see _"Notify All"_ button => This button makes "POST" request to `packages/nextjs/pages/api/push/notify-all.ts` which will send notification to all the subscribers
 
-## Contributing to Scaffold-ETH 2
+### 6. Deploying your contracts on a public network
 
-We welcome contributions to Scaffold-ETH 2!
+1. Edit the `defaultNetwork` in `packages/hardhat/hardhat.config.ts` to [your choice of public EVM networks](https://ethereum.org/en/developers/docs/networks/)
 
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+2. You will need to generate a **deployer address** using `yarn generate`. This creates a mnemonic and saves it locally.
+
+3. Run `yarn deploy` to deploy your smart contract to the public network selected in `packages/hardhat/hardhat.config.ts`
+
+4. Edit your frontend config in `packages/nextjs/scaffold.config.ts` to change the `targetNetwork`.
+
+> Hint: You will need to send ETH to your deployer address to deploy your contracts.  
+> Use `yarn account` to view your deployer account balances.
+
+### 7. Deploying your PWA to Vercel
+
+> Hint: We recommend connecting your GitHub repo to Vercel (through the Vercel UI) so it gets automatically deployed when pushing to main.
+
+To deploy directly from the CLI, run this and follow the steps to deploy to Vercel:
+
+```
+yarn vercel
+```
+
+Once you log in (email, github, etc), the default options should work. It'll give you a public URL.
+
+If you want to redeploy to the same production URL you can run:
+
+```
+yarn vercel --prod
+```
+
+#### 7.1 Setting Environment Variables
+
+When you deploy to Vercel you have to set all the environment variables from your `packages/nextjs/.env.local` file into your Vercel Environment Variables section.
+
+You can do this in the Vercel Project dashboard under _"Settings > Environment Variables"_.
+
+> Hint: You can mass copy all the config variables from your `packages/nextjs/.env.local` config files and paste them into the Vercel form.
+
+## Development and References
+
+### Important Development files
+
+1. We have extended [`next-pwa`](https://github.com/shadowwalker/next-pwa) default service-worker at `packages/worker/index.ts`
+
+2. Logic for subscription for push notification is present in `packages/nextjs/utils/service-workers/index.ts`
+
+3. All the push backend routes are present in `packages/nextjs/pages/api/push`
+
+### Scaffold ETH 2 Documentation
+
+To learn more about Scaffold-ETH 2 features and development guide, you can check out the [Scaffold-ETH 2 Docs](https://docs.scaffoldeth.io/).
+
+### Extra Resources
+
+1. [The service worker lifecycle](https://web.dev/service-worker-lifecycle/)
+
+2. [next-pwa](https://github.com/shadowwalker/next-pwa)
+
+3. [Google's Push Notification's series](https://web.dev/push-notifications-overview/)
