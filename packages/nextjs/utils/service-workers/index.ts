@@ -1,3 +1,6 @@
+import { saveSubscription } from "../push-api-calls";
+import { notification } from "../scaffold-eth";
+
 export const notificationsSupported = () => {
   if (typeof window === undefined) return false;
 
@@ -9,41 +12,57 @@ export const unregisterServiceWorkers = async () => {
   await Promise.all(registrations.map(r => r.unregister()));
 };
 
-export const subscribe = async () => {
+export const askForPermission = async () => {
   try {
-    const swRegistration = await navigator.serviceWorker.getRegistration("/sw.js");
     const premissionResult = await window?.Notification.requestPermission();
     if (premissionResult === "denied") alert("Permission already denied, please enable notifications manually");
+  } catch (err) {
+    console.error("Inside askForPermission function: ", err);
+    throw new Error(`Error while allowing for notifications`);
+  }
+};
+
+export const subscribeToNotifications = async () => {
+  let notificationId = null;
+  try {
+    notificationId = notification.loading("Waiting for serviceWorker");
+    await navigator.serviceWorker.ready;
+    notification.remove(notificationId);
+
+    notificationId = notification.loading("Subscribing to notification");
+    const swRegistration = await navigator.serviceWorker.getRegistration("/sw.js");
     if (!swRegistration) {
-      throw new Error("Service worker not registered");
+      throw new Error("Not Registered");
     }
 
+    if (swRegistration.installing) {
+      throw new Error("ServiceWorker Installing");
+    }
     const options = {
       applicationServerKey: process.env.NEXT_PUBLIC_PUBLIC_KEY_VAPID ?? "",
       userVisibleOnly: true,
     };
     const subscription = await swRegistration.pushManager.subscribe(options);
-
     await saveSubscription(subscription);
-
+    notification.remove(notificationId);
+    notification.success("Successfully subscribed to notification");
     return subscription;
-  } catch (err) {
+  } catch (err: any) {
+    if (err instanceof Error) {
+      switch (err.message) {
+        case "Not Registered":
+          throw new Error("Service Worker not registered, please try again later");
+        case "ServiceWorker Installing":
+          throw new Error("Service Worker is installing, please try again");
+        default:
+          throw new Error(`Error while subscribing to notifications ${err?.message}`);
+      }
+    }
     console.error("Inside subscribe function: ", err);
-    throw new Error("Error while subscribing to push notifications");
+    throw new Error(`Error while subscribing to notifications`);
+  } finally {
+    if (notificationId) {
+      notification.remove(notificationId);
+    }
   }
-};
-
-const saveSubscription = async (subscription: PushSubscription) => {
-  const ORIGIN = window.location.origin;
-  const BACKEND_URL = `${ORIGIN}/api/push/add-subscription`;
-
-  const response = await fetch(BACKEND_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(subscription),
-  });
-  console.log("Sever Response", response);
-  return response.json();
 };

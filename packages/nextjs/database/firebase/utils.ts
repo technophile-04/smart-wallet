@@ -1,5 +1,5 @@
 import { COLLECTION_NAME, firebaseDB } from "./config";
-import { addDoc, collection, deleteDoc, getDocs } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, getDocs, query, where } from "firebase/firestore";
 import { PushSubscription } from "web-push";
 
 type Subscription = {
@@ -9,7 +9,7 @@ type Subscription = {
 
 const subscriptionCollectionRef = collection(firebaseDB, COLLECTION_NAME);
 
-export const saveSubscriptionToDb = async (subscription: PushSubscription) => {
+export const saveSubscriptionInDb = async (subscription: PushSubscription) => {
   try {
     await addDoc(subscriptionCollectionRef, subscription);
   } catch (e) {
@@ -32,15 +32,23 @@ export const getAllSubsriptionsFromDb = async () => {
   }
 };
 
-export const deleteSubscriptionFromDatabase = async (id: string) => {
+export const isSubscriptionPresentInDB = async (subscription: PushSubscription) => {
   try {
-    const querySnapshot = await getDocs(subscriptionCollectionRef);
-    console.log("The id is", id);
+    const q = query(subscriptionCollectionRef, where("endpoint", "==", subscription.endpoint));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (e) {
+    console.log("Error while fetching from DB :", e);
+  }
+};
+
+export const deleteSubscriptionFromDB = async (subscription: PushSubscription) => {
+  try {
+    const q = query(subscriptionCollectionRef, where("endpoint", "==", subscription.endpoint));
+    const querySnapshot = await getDocs(q);
 
     querySnapshot.forEach(async doc => {
-      if (doc.ref.id === id) {
-        await deleteDoc(doc.ref);
-      }
+      await deleteDoc(doc.ref);
     });
   } catch (e) {
     console.log("Error while deleting from DB :", e);

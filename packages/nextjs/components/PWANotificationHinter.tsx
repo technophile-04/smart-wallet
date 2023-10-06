@@ -2,21 +2,55 @@ import { useState } from "react";
 import { useIsClient } from "usehooks-ts";
 import { useGlobalState } from "~~/services/store/store";
 import { notification } from "~~/utils/scaffold-eth";
-import { notificationsSupported, subscribe } from "~~/utils/service-workers";
+import { askForPermission, notificationsSupported, subscribeToNotifications } from "~~/utils/service-workers";
 
 export const PWANotificationHinter = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAskForPermissionLoading, setIsAskForPermissionLoading] = useState(false);
+  const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
   const { setPushNotificationSubscription } = useGlobalState(state => state);
   const isClient = useIsClient();
 
-  return isClient ? (
+  if (!isClient || !window) return null;
+
+  if (!notificationsSupported()) {
+    return (
+      <button className="btn btn-primary" disabled={true}>
+        Please install PWA first
+      </button>
+    );
+  }
+
+  if (window.Notification.permission !== "granted") {
+    return (
+      <button
+        className="btn btn-primary"
+        disabled={isAskForPermissionLoading}
+        onClick={async () => {
+          try {
+            setIsAskForPermissionLoading(true);
+            await askForPermission();
+          } catch (e) {
+            if (e instanceof Error) {
+              notification.error(e.message);
+            }
+          } finally {
+            setIsAskForPermissionLoading(false);
+          }
+        }}
+      >
+        {isAskForPermissionLoading ? <span className="loading loading-dots loading-xs"></span> : "Allow Notifications"}
+      </button>
+    );
+  }
+
+  return (
     <button
       className="btn btn-primary"
-      disabled={!notificationsSupported()}
+      disabled={isSubscribeLoading}
       onClick={async () => {
+        setIsSubscribeLoading(true);
         try {
-          setIsLoading(true);
-          const subscription = await subscribe();
+          const subscription = await subscribeToNotifications();
           setPushNotificationSubscription(subscription);
         } catch (e) {
           if (e instanceof Error) {
@@ -24,17 +58,11 @@ export const PWANotificationHinter = () => {
           }
           setPushNotificationSubscription(null);
         } finally {
-          setIsLoading(false);
+          setIsSubscribeLoading(false);
         }
       }}
     >
-      {isLoading ? (
-        <span className="loading loading-dots loading-xs"></span>
-      ) : notificationsSupported() ? (
-        "Allow Notifications"
-      ) : (
-        "Please install PWA first"
-      )}
+      {isSubscribeLoading ? <span className="loading loading-dots loading-xs"></span> : "Subscribe to notifications"}
     </button>
-  ) : null;
+  );
 };

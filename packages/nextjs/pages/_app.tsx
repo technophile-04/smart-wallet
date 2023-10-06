@@ -14,6 +14,7 @@ import { useGlobalState } from "~~/services/store/store";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { appChains } from "~~/services/web3/wagmiConnectors";
 import "~~/styles/globals.css";
+import { checkMySubscription } from "~~/utils/push-api-calls";
 
 const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   const price = useNativeCurrencyPrice();
@@ -34,11 +35,28 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
 
   useEffect(() => {
     async function getSubscription() {
+      let subscription: PushSubscription | null = null;
       try {
         const swRegistration = await navigator.serviceWorker.ready;
-        const subscription = await swRegistration.pushManager.getSubscription();
+        subscription = await swRegistration.pushManager.getSubscription();
+        if (!subscription) {
+          setPushNotificationSubscription(null);
+          return;
+        }
+        const data = await checkMySubscription(subscription);
+
+        if (!data.isPresent) {
+          await subscription.unsubscribe();
+          setPushNotificationSubscription(null);
+          return;
+        }
         setPushNotificationSubscription(subscription);
+        console.log("subscription is:", subscription);
       } catch (e) {
+        if (subscription) {
+          await subscription.unsubscribe();
+        }
+        setPushNotificationSubscription(null);
         console.log(e);
       }
     }

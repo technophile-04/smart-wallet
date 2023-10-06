@@ -1,10 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import webpush, { PushSubscription } from "web-push";
-import { saveSubscriptionInDb } from "~~/database/firebase/utils";
-
-const PUBLIC_KEY_VAPID = process.env.NEXT_PUBLIC_PUBLIC_KEY_VAPID ?? "";
-const PRIVATE_KEY_VAPID = process.env.PRIVATE_KEY_VAPID ?? "";
-webpush.setVapidDetails("mailto:admin@buidlguidl.com", PUBLIC_KEY_VAPID, PRIVATE_KEY_VAPID);
+import { PushSubscription } from "web-push";
+import { deleteSubscriptionFromDB } from "~~/database/firebase/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -25,10 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res;
   }
   const subscription = req.body as PushSubscription;
-
   try {
-    await saveSubscriptionInDb(subscription);
-    res.status(200).json({ message: "Subscription added." });
+    await deleteSubscriptionFromDB(subscription);
+    res.status(200).json({ message: "Subscription deleted" });
   } catch (e) {
     console.log("Error :", e);
     res.status(500);
@@ -36,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.send(
       JSON.stringify({
         error: {
-          id: "unable-to-save-subscription",
-          message: "The subscription was received but we were unable to save it to our database.",
+          id: "unable-to-delete-subscription",
+          message: "The subscription was received but we were unable to delete it to our database.",
         },
       }),
     );
