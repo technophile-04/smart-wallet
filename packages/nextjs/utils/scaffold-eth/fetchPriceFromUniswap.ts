@@ -1,9 +1,9 @@
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import { Pair, Route } from "@uniswap/v2-sdk";
-import { createPublicClient, http, parseAbi } from "viem";
+import { Address, createPublicClient, http, parseAbi } from "viem";
 import { mainnet } from "wagmi";
 import scaffoldConfig from "~~/scaffold.config";
-import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 const publicClient = createPublicClient({
   chain: mainnet,
@@ -16,19 +16,22 @@ const ABI = parseAbi([
   "function token1() external view returns (address)",
 ]);
 
-export const fetchPriceFromUniswap = async (): Promise<number> => {
-  const configuredNetwork = getTargetNetwork();
-  if (configuredNetwork.nativeCurrency.symbol !== "ETH" && !configuredNetwork.nativeCurrencyTokenAddress) {
+export const fetchPriceFromUniswap = async (targetNetwork: ChainWithAttributes): Promise<number> => {
+  if (
+    targetNetwork.nativeCurrency.symbol !== "ETH" &&
+    targetNetwork.nativeCurrency.symbol !== "SEP" &&
+    !targetNetwork.nativeCurrencyTokenAddress
+  ) {
     return 0;
   }
   try {
     const DAI = new Token(1, "0x6B175474E89094C44Da98b954EedeAC495271d0F", 18);
     const TOKEN = new Token(
       1,
-      configuredNetwork.nativeCurrencyTokenAddress || "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      targetNetwork.nativeCurrencyTokenAddress || "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       18,
     );
-    const pairAddress = Pair.getAddress(TOKEN, DAI);
+    const pairAddress = Pair.getAddress(TOKEN, DAI) as Address;
 
     const wagmiConfig = {
       address: pairAddress,
@@ -59,7 +62,10 @@ export const fetchPriceFromUniswap = async (): Promise<number> => {
     const price = parseFloat(route.midPrice.toSignificant(6));
     return price;
   } catch (error) {
-    console.error("useNativeCurrencyPrice - Error fetching ETH price from Uniswap: ", error);
+    console.error(
+      `useNativeCurrencyPrice - Error fetching ${targetNetwork.nativeCurrency.symbol} price from Uniswap: `,
+      error,
+    );
     return 0;
   }
 };

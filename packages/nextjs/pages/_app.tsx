@@ -19,19 +19,12 @@ import { checkMySubscription } from "~~/utils/push-api-calls";
 const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   const price = useNativeCurrencyPrice();
   const { setNativeCurrencyPrice, setPushNotificationSubscription } = useGlobalState(state => state);
-  // This variable is required for initial client side rendering of correct theme for RainbowKit
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
-  const { isDarkMode } = useDarkMode();
 
   useEffect(() => {
     if (price > 0) {
       setNativeCurrencyPrice(price);
     }
   }, [setNativeCurrencyPrice, price]);
-
-  useEffect(() => {
-    setIsDarkTheme(isDarkMode);
-  }, [isDarkMode]);
 
   useEffect(() => {
     async function getSubscription() {
@@ -64,6 +57,28 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   }, [setPushNotificationSubscription]);
 
   return (
+    <>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="relative flex flex-col flex-1">
+          <Component {...pageProps} />
+        </main>
+        <Footer />
+      </div>
+      <Toaster />
+    </>
+  );
+};
+
+const ScaffoldEthAppWithProviders = (props: AppProps) => {
+  // This variable is required for initial client side rendering of correct theme for RainbowKit
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const { isDarkMode } = useDarkMode();
+  useEffect(() => {
+    setIsDarkTheme(isDarkMode);
+  }, [isDarkMode]);
+
+  return (
     <WagmiConfig config={wagmiConfig}>
       <NextNProgress />
       <RainbowKitProvider
@@ -71,17 +86,10 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
         avatar={BlockieAvatar}
         theme={isDarkTheme ? darkTheme() : lightTheme()}
       >
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="relative flex flex-col flex-1">
-            <Component {...pageProps} />
-          </main>
-          <Footer />
-        </div>
-        <Toaster />
+        <ScaffoldEthApp {...props} />
       </RainbowKitProvider>
     </WagmiConfig>
   );
 };
 
-export default ScaffoldEthApp;
+export default ScaffoldEthAppWithProviders;

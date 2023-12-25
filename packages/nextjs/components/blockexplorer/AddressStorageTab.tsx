@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { createPublicClient, http, toHex } from "viem";
-import { hardhat } from "wagmi/chains";
+import { Address, createPublicClient, http, toHex } from "viem";
+import { hardhat } from "viem/chains";
 
 const publicClient = createPublicClient({
   chain: hardhat,
   transport: http(),
 });
 
-export const AddressStorageTab = ({ address }: { address: string }) => {
+export const AddressStorageTab = ({ address }: { address: Address }) => {
   const [storage, setStorage] = useState<string[]>([]);
 
   useEffect(() => {

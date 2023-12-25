@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import fs from "fs";
 import { GetServerSideProps } from "next";
 import path from "path";
-import { createPublicClient, http } from "viem";
-import { hardhat } from "wagmi/chains";
+import { Address as AddressType, createPublicClient, http } from "viem";
+import { hardhat } from "viem/chains";
 import {
   AddressCodeTab,
   AddressLogsTab,
@@ -13,7 +13,7 @@ import {
   TransactionsTable,
 } from "~~/components/blockexplorer/";
 import { Address, Balance } from "~~/components/scaffold-eth";
-import deployedContracts from "~~/generated/deployedContracts";
+import deployedContracts from "~~/contracts/deployedContracts";
 import { useFetchBlocks } from "~~/hooks/scaffold-eth";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
@@ -23,7 +23,7 @@ type AddressCodeTabProps = {
 };
 
 type PageProps = {
-  address: string;
+  address: AddressType;
   contractData: AddressCodeTabProps | null;
 };
 
@@ -34,7 +34,7 @@ const publicClient = createPublicClient({
 
 const AddressPage = ({ address, contractData }: PageProps) => {
   const router = useRouter();
-  const { blocks, transactionReceipts, currentPage, totalBlocks, setCurrentPage, isLoading } = useFetchBlocks();
+  const { blocks, transactionReceipts, currentPage, totalBlocks, setCurrentPage } = useFetchBlocks();
   const [activeTab, setActiveTab] = useState("transactions");
   const [isContract, setIsContract] = useState(false);
 
@@ -79,36 +79,30 @@ const AddressPage = ({ address, contractData }: PageProps) => {
         </div>
       </div>
       {isContract && (
-        <div className="tabs">
+        <div className="tabs tabs-lifted w-min">
           <button
-            className={`tab tab-lifted ${activeTab === "transactions" ? "tab-active" : ""}`}
+            className={`tab ${activeTab === "transactions" ? "tab-active" : ""}`}
             onClick={() => setActiveTab("transactions")}
           >
             Transactions
           </button>
-          <button
-            className={`tab tab-lifted ${activeTab === "code" ? "tab-active" : ""}`}
-            onClick={() => setActiveTab("code")}
-          >
+          <button className={`tab ${activeTab === "code" ? "tab-active" : ""}`} onClick={() => setActiveTab("code")}>
             Code
           </button>
           <button
-            className={`tab tab-lifted ${activeTab === "storage" ? "tab-active" : ""}`}
+            className={`tab  ${activeTab === "storage" ? "tab-active" : ""}`}
             onClick={() => setActiveTab("storage")}
           >
             Storage
           </button>
-          <button
-            className={`tab tab-lifted ${activeTab === "logs" ? "tab-active" : ""}`}
-            onClick={() => setActiveTab("logs")}
-          >
+          <button className={`tab  ${activeTab === "logs" ? "tab-active" : ""}`} onClick={() => setActiveTab("logs")}>
             Logs
           </button>
         </div>
       )}
       {activeTab === "transactions" && (
         <div className="pt-4">
-          <TransactionsTable blocks={filteredBlocks} transactionReceipts={transactionReceipts} isLoading={isLoading} />
+          <TransactionsTable blocks={filteredBlocks} transactionReceipts={transactionReceipts} />
           <PaginationButton
             currentPage={currentPage}
             totalItems={Number(totalBlocks)}
@@ -176,7 +170,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
     throw new Error(`Directory ${buildInfoDirectory} not found.`);
   }
 
-  const deployedContractsOnChain = contracts ? contracts[chainId][0].contracts : {};
+  const deployedContractsOnChain = contracts ? contracts[chainId] : {};
   for (const [contractName, contractInfo] of Object.entries(deployedContractsOnChain)) {
     if (contractInfo.address.toLowerCase() === address) {
       contractPath = `contracts/${contractName}.sol`;

@@ -27,7 +27,6 @@ const config: HardhatUserConfig = {
     },
   },
   defaultNetwork: "localhost",
-
   namedAccounts: {
     deployer: {
       // By default, it will take the first Hardhat account as the deployer
@@ -79,6 +78,14 @@ const config: HardhatUserConfig = {
       url: `https://polygon-mumbai.g.alchemy.com/v2/${providerApiKey}`,
       accounts: [deployerPrivateKey],
     },
+    polygonZkEvm: {
+      url: `https://polygonzkevm-mainnet.g.alchemy.com/v2/${providerApiKey}`,
+      accounts: [deployerPrivateKey],
+    },
+    polygonZkEvmTestnet: {
+      url: `https://polygonzkevm-testnet.g.alchemy.com/v2/${providerApiKey}`,
+      accounts: [deployerPrivateKey],
+    },
     zkSyncTestnet: {
       url: "https://testnet.era.zksync.dev",
       zksync: true,
@@ -105,6 +112,22 @@ const config: HardhatUserConfig = {
     },
     baseGoerli: {
       url: "https://goerli.base.org",
+      accounts: [deployerPrivateKey],
+    },
+    scrollSepolia: {
+      url: "https://sepolia-rpc.scroll.io",
+      accounts: [deployerPrivateKey],
+    },
+    scroll: {
+      url: "https://rpc.scroll.io",
+      accounts: [deployerPrivateKey],
+    },
+    pgn: {
+      url: "https://rpc.publicgoods.network",
+      accounts: [deployerPrivateKey],
+    },
+    pgnTestnet: {
+      url: "https://sepolia.publicgoods.network",
       accounts: [deployerPrivateKey],
     },
   },

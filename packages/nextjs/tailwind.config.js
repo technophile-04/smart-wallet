@@ -30,6 +30,12 @@ module.exports = {
           ".tooltip": {
             "--tooltip-tail": "6px",
           },
+          ".link": {
+            textUnderlineOffset: "2px",
+          },
+          ".link:hover": {
+            opacity: "80%",
+          },
         },
       },
       {
