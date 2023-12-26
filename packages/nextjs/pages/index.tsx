@@ -13,7 +13,7 @@ import { notification } from "~~/utils/scaffold-eth";
 
 const Home: NextPage = () => {
   const { scaAddress, scaSigner } = useSmartAccount();
-  const [etherInput, setEtherInput] = useState("0.1");
+  const [etherInput, setEtherInput] = useState("");
   const [toAddress, setToAddress] = useState("");
   const transactor = useSmartTransactor();
   const [isTxnLoading, setIsTxnLoading] = useState(false);
@@ -74,7 +74,7 @@ const Home: NextPage = () => {
           )}
           <div className="divider text-xl">Send ETH</div>
           <AddressInput value={toAddress} placeholder="Receiver's address" onChange={setToAddress} />
-          <EtherInput value={etherInput} onChange={setEtherInput} />
+          <EtherInput placeholder="Value to send" value={etherInput} onChange={setEtherInput} />
           <button
             className="btn btn-primary rounded-xl"
             disabled={!scaAddress || isTxnLoading}
