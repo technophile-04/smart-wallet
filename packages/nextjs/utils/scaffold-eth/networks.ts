@@ -74,6 +74,8 @@ export function getUserOpExplorerTxLink(chainId: number, txnHash: string) {
   }
 
   const targetChain = targetChainArr[0] as keyof typeof chains;
+  if (chains[targetChain].id === chains.baseGoerli.id)
+    return `https://app.jiffyscan.xyz/userOpHash/${txnHash}?network=base-testnet`;
   return `https://app.jiffyscan.xyz/userOpHash/${txnHash}?network=${chains[targetChain].network}`;
 }
 
