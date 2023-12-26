@@ -18,6 +18,11 @@ export const useSmartAccount = () => {
       new AlchemyProvider({
         chain: chain,
         apiKey: scaffoldConfig.alchemyApiKey,
+        opts: {
+          txMaxRetries: 20,
+          txRetryIntervalMs: 2_000,
+          txRetryMulitplier: 1.5,
+        },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chain.id],

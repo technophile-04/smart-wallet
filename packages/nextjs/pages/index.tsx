@@ -3,14 +3,42 @@ import Image from "next/image";
 import { blo } from "blo";
 import type { NextPage } from "next";
 import { QRCodeSVG } from "qrcode.react";
+import { parseEther } from "viem";
 import { MetaHeader } from "~~/components/MetaHeader";
 import QrCodeSkeleton from "~~/components/burnerwallet/QRCodeSkeleton";
-import { Address, Balance, EtherInput } from "~~/components/scaffold-eth";
+import { Address, AddressInput, Balance, EtherInput } from "~~/components/scaffold-eth";
 import { useSmartAccount } from "~~/hooks/burnerWallet/useSmartAccount";
+import { useSmartTransactor } from "~~/hooks/burnerWallet/useSmartTrsansactor";
+import { notification } from "~~/utils/scaffold-eth";
 
 const Home: NextPage = () => {
-  const { scaAddress } = useSmartAccount();
+  const { scaAddress, scaSigner } = useSmartAccount();
   const [etherInput, setEtherInput] = useState("0.1");
+  const [toAddress, setToAddress] = useState("");
+  const transactor = useSmartTransactor();
+  const [isTxnLoading, setIsTxnLoading] = useState(false);
+
+  const handleSendEther = async () => {
+    if (!scaSigner) {
+      notification.error("Cannot access smart account");
+      return;
+    }
+    setIsTxnLoading(true);
+    try {
+      const userOperationPromise = scaSigner.sendUserOperation({
+        value: parseEther(etherInput),
+        target: toAddress as `0x${string}`,
+        data: "0x",
+      });
+
+      await transactor(() => userOperationPromise);
+    } catch (e) {
+      notification.error("Oops, something went wrong");
+      console.error("Error sending transaction: ", e);
+    } finally {
+      setIsTxnLoading(false);
+    }
+  };
 
   return (
     <>
@@ -22,7 +50,7 @@ const Home: NextPage = () => {
             <span className="block text-4xl font-bold">SE-2 Smart Wallet</span>
           </h1>
         </div>
-        <div className="space-y-4 flex flex-col items-center bg-base-100 border-base-300 border shadow-md shadow-secondary rounded-3xl px-8 py-8">
+        <div className="space-y-4 flex flex-col items-center bg-base-100 border-base-300 border shadow-md shadow-secondary rounded-3xl px-8 py-8 w-[24rem] max-w-sm">
           {scaAddress ? (
             <>
               <div className="relative shadow-xl rounded-xl">
@@ -44,9 +72,15 @@ const Home: NextPage = () => {
           ) : (
             <QrCodeSkeleton />
           )}
+          <div className="divider text-xl">Send ETH</div>
+          <AddressInput value={toAddress} placeholder="Receiver's address" onChange={setToAddress} />
           <EtherInput value={etherInput} onChange={setEtherInput} />
-          <button className="btn btn-primary rounded-xl" disabled={!scaAddress}>
-            Send
+          <button
+            className="btn btn-primary rounded-xl"
+            disabled={!scaAddress || isTxnLoading}
+            onClick={handleSendEther}
+          >
+            {isTxnLoading ? <span className="loading loading-spinner"></span> : "Send"}
           </button>
         </div>
       </div>
