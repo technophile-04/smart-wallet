@@ -2,6 +2,9 @@
 
 # 🏗 SE-2 Smart Wallet 📱
 
+![app image](https://github.com/technophile-04/smart-wallet/assets/80153681/c871a06e-d9b2-401e-a27c-7635d7c81a8c)
+
+
 Install dependencies:
 
 ```
