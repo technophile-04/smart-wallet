@@ -84,7 +84,9 @@ export const useSmartTransactor = (_walletClient?: WalletClient): TransactionFun
       }
       const userOpTxnURL = network ? getUserOpExplorerTxLink(network, userOpHash) : "";
 
-      notificationId = notification.loading(<TxnNotification message="Waiting for transaction to complete." />);
+      notificationId = notification.loading(
+        <TxnNotification message="Waiting for transaction to complete." userOpExplorerLink={userOpTxnURL} />,
+      );
 
       const txnHash = await provider.waitForUserOperationTransaction(userOpHash);
       const blockExplorerTxURL = network ? getBlockExplorerTxLink(network, txnHash) : "";

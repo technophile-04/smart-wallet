@@ -21,7 +21,7 @@ export const useSmartAccount = () => {
         opts: {
           txMaxRetries: 20,
           txRetryIntervalMs: 2_000,
-          txRetryMulitplier: 1.1,
+          txRetryMulitplier: 1.2,
         },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
