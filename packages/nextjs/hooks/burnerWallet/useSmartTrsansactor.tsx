@@ -108,7 +108,7 @@ export const useSmartTransactor = (_walletClient?: WalletClient): TransactionFun
         />,
         {
           icon: "🎉",
-          duration: 8000,
+          duration: Infinity,
         },
       );
       if (options?.onBlockConfirmation && transactionReceipt) options.onBlockConfirmation(transactionReceipt);
