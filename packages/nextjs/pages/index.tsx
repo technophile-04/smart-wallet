@@ -43,9 +43,9 @@ const Home: NextPage = () => {
   return (
     <>
       <MetaHeader />
-      <div className="flex items-center flex-col flex-grow pt-10">
-        <div className="px-5 flex flex-col items-center">
-          <h1 className="text-center mb-8">
+      <div className="flex items-center flex-col flex-grow pt-5">
+        <div className="px-2 flex flex-col items-center">
+          <h1 className="text-center mb-4">
             <span className="block text-2xl mb-2">Welcome to</span>
             <span className="block text-4xl font-bold">SE-2 Smart Wallet</span>
           </h1>
